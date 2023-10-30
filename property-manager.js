@@ -21,7 +21,8 @@ module.exports = () => {
             prefer: 'return=representation',
         }
         try {
-            let resp = await client.get('/msr_homes')
+            let resp = await client.get(`/msr_homes?$filter=msr_propertyid eq '11950787' or msr_propertyid eq '11948561' or msr_propertyid eq '11950616' or msr_propertyid eq '11948853' or msr_propertyid eq '11949107' or msr_propertyid eq '11948830' or msr_propertyid eq '11950612' or msr_propertyid eq '11950631'`)
+            console.log(resp?.data);
             return resp?.data?.value.map(v => v.msr_propertyid);
         }
         catch (err) {

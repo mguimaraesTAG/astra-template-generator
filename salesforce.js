@@ -21,32 +21,34 @@ module.exports = async () => {
       })
     },
     async getProperties(pmPropertyIds) {
-      let props = []
-      const eigthPartIndex = Math.ceil(pmPropertyIds.length / 8);
-      for (var i = 0; i < 8; i++) {
-        if (i === 7) {
-          const lastPart = await this.getPropertyByIdsRange(pmPropertyIds);
-          if(lastPart) props = [...props, ...lastPart]
-          continue;
-        }
-        const part = await this.getPropertyByIdsRange(pmPropertyIds.splice(-eigthPartIndex));
-        if(part) props = [...props, ...part]
-      }
-      return props;
+      // let props = []
+      // const eigthPartIndex = Math.ceil(pmPropertyIds.length / 8);
+      // for (var i = 0; i < 8; i++) {
+      //   if (i === 7) {
+      //     const lastPart = await this.getPropertyByIdsRange(pmPropertyIds);
+      //     if(lastPart) props = [...props, ...lastPart]
+      //     continue;
+      //   }
+      //   const part = await this.getPropertyByIdsRange(pmPropertyIds.splice(-eigthPartIndex));
+      //   if(part) props = [...props, ...part]
+      // }
+      // return props;
+      return await this.getPropertyByIdsRange(pmPropertyIds);
     },
     async getOwners(pmPropertyIds) {
-      let props = []
-      const eigthPartIndex = Math.ceil(pmPropertyIds.length / 8);
-      for (var i = 0; i < 8; i++) {
-        if (i === 7) {
-          const lastPart = await this.getOwnerByPropertyIdsRange(pmPropertyIds);
-          if(lastPart) props = [...props, ...lastPart]
-          continue;
-        }
-        const part = await this.getOwnerByPropertyIdsRange(pmPropertyIds.splice(-eigthPartIndex));
-        if(part) props = [...props, ...part]
-      }
-      return props;
+      // let props = []
+      // const eigthPartIndex = Math.ceil(pmPropertyIds.length / 8);
+      // for (var i = 0; i < 8; i++) {
+      //   if (i === 7) {
+      //     const lastPart = await this.getOwnerByPropertyIdsRange(pmPropertyIds);
+      //     if(lastPart) props = [...props, ...lastPart]
+      //     continue;
+      //   }
+      //   const part = await this.getOwnerByPropertyIdsRange(pmPropertyIds.splice(-eigthPartIndex));
+      //   if(part) props = [...props, ...part]
+      // }
+      // return props;
+      return await this.getOwnerByPropertyIdsRange(pmPropertyIds);
     },
     async getOwnerByPropertyIdsRange(propertyId) {
       const result = await this.connection.query(
@@ -56,7 +58,7 @@ module.exports = async () => {
     },
     async getPropertyByIdsRange(propertyId) {
       const result = await this.connection.query(
-        `select Id, Vendor_Property_Id__c, Purchase_Price__c, Fund__c, Purchasing_Entity__c from Property__c where Id not in (select Property__c from Owner__c) and Vendor_Property_Id__c in (${propertyId.map(v => `'${v}'`).join(', ')})`
+        `select Id, Vendor_Property_Id__c, Purchase_Price__c, Fund__c, Purchasing_Entity__c from Property__c WHERE Id not in (select Property__c from Owner__c) and Vendor_Property_Id__c in (${propertyId.map(v => `'${v}'`).join(', ')})`
       )
       if (result?.records?.length > 0) return result.records;
     },
@@ -66,12 +68,13 @@ module.exports = async () => {
     },
     async getPropertiesForTemplate(pmRecords) {
       const pmCopy1 = [...pmRecords]
+      console.log(pmRecords)
       const owners = await this.getOwners(pmCopy1)
       const properties = await this.getProperties(pmRecords)
       const funds = await this.getFundsWithPurchasingEntities()
       const dateOfSale = new Date()
 
-      const recordsFromOwners = owners.map(o => {
+      const recordsFromOwners = !owners ? [] : owners.map(o => {
         const sellingFund = o.Fund__r?.Name ?? 'Vaca Morada'
         const purchasingFund = sellingFund == 'Vaca Morada' ? 'ASFRP' : 'Vaca Morada'
         if (o?.Property__r) {
@@ -86,7 +89,7 @@ module.exports = async () => {
           }
         }
       })
-      const recordsFromProperties = properties.map(p => {
+      const recordsFromProperties = !properties ? [] : properties.map(p => {
         const sellingFund = p.Fund__c ?? 'Vaca Morada'
         const purchasingFund = sellingFund == 'Vaca Morada' ? 'ASFRP' : 'Vaca Morada'
         return {
